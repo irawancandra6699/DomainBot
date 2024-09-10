@@ -52,12 +52,12 @@ const getRecordByIp = async (zoneId, ip) => {
     return response.data.result.length > 0;
 };
 
-const createDnsRecord = async (zoneId, domain, ip) => {
+const createDnsRecord = async (zoneId, domain, ip, proxied) => {
     const response = await axios.post(`https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records`, {
         type: 'A',
         name: domain,
         content: ip,
-        proxied: false
+        proxied: proxied
     }, {
         headers: {
             'X-Auth-Email': iniemail,
@@ -69,12 +69,12 @@ const createDnsRecord = async (zoneId, domain, ip) => {
     return response.data.result.id;
 };
 
-const updateDnsRecord = async (zoneId, recordId, domain, ip) => {
+const updateDnsRecord = async (zoneId, recordId, domain, ip, proxied) => {
     const response = await axios.put(`https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records/${recordId}`, {
         type: 'A',
         name: domain,
         content: ip,
-        proxied: false
+        proxied: proxied
     }, {
         headers: {
             'X-Auth-Email': iniemail,
@@ -110,7 +110,7 @@ const deleteDnsRecord = async (zoneId, recordId) => {
     }
 };
 
-const createRecord = async (domain, ip) => {
+const createRecord = async (domain, ip, proxied) => {
     try {
         const zoneId = await getZoneId(domain);
         const recordExists = await getRecordByIp(zoneId, ip);
@@ -121,10 +121,10 @@ const createRecord = async (domain, ip) => {
         let recordId = await getRecordId(zoneId, domain);
 
         if (!recordId) {
-            recordId = await createDnsRecord(zoneId, domain, ip);
+            recordId = await createDnsRecord(zoneId, domain, ip, proxied);
         }
 
-        return await updateDnsRecord(zoneId, recordId, domain, ip);
+        return await updateDnsRecord(zoneId, recordId, domain, ip, proxied);
     } catch (error) {
         if (error.response) {
             console.error('Error creating/updating DNS record:', error.response.data);
@@ -156,10 +156,48 @@ bot.on('text', (ctx) => {
 
     if (status === 'awaiting_ip') {
         const ip = ctx.message.text;
+        userContext[userId] = { status: 'awaiting_proxied', ip: ip }; // Set status user
+        ctx.reply('⚠️ *Do you want to enable proxy for this DNS record?*', {
+            parse_mode: 'Markdown',
+            ...Markup.inlineKeyboard([
+                [Markup.button.callback('Yes', 'proxied_true')],
+                [Markup.button.callback('No', 'proxied_false')]
+            ]).resize()
+        });
+    }
+});
+
+bot.action('proxied_true', (ctx) => {
+    const userId = ctx.from.id;
+    const userState = userContext[userId];
+
+    if (userState && userState.status === 'awaiting_proxied') {
+        const ip = userState.ip;
         const domain = `${Math.random().toString(36).substring(2, 7)}.${domaincf}`;
-        createRecord(domain, ip).then((recordId) => {
+        createRecord(domain, ip, true).then((recordId) => {
             if (recordId) {
-                ctx.reply(`✅ *Registration Successful*\n*VPS IP:* \`${ip}\`\n*Domain:* \`${domain}\``, { parse_mode: 'Markdown' });
+                ctx.reply(`✅ *Registration Successful*\n*VPS IP:* \`${ip}\`\n*Domain:* \`${domain}\`\n*Proxied:* \`true\``, { parse_mode: 'Markdown' });
+            } else {
+                ctx.reply('⚠️ *Failed to create DNS record.*', { parse_mode: 'Markdown' });
+            }
+            delete userContext[userId]; 
+        }).catch((error) => {
+            ctx.reply('⚠️ *Error occurred while processing your request.*', { parse_mode: 'Markdown' });
+            delete userContext[userId]; 
+        });
+    }
+});
+
+bot.action('proxied_false', (ctx) => {
+    const userId = ctx.from.id;
+    const userState = userContext[userId];
+
+    if (userState && userState.status === 'awaiting_proxied') {
+        const ip = userState.ip;
+        const domain = `${Math.random().toString(36).substring(2, 7)}.${domaincf}`;
+        createRecord(domain, ip, false).then((recordId) => {
+            if (recordId) {
+                ctx.reply(`✅ *Registration Successful*\n*VPS IP:* \`${ip}\`\n*Domain:* \`${domain}\`\n*Proxied:* \`false\``, { parse_mode: 'Markdown' });
             } else {
                 ctx.reply('⚠️ *Failed to create DNS record.*', { parse_mode: 'Markdown' });
             }
