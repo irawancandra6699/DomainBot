@@ -28,13 +28,26 @@ AutoFTbot adalah bot Telegram yang memungkinkan pengguna untuk menambahkan dan m
     npm install
     ```
 
-4. **Konfigurasi:**
-   - Gantilah `token`, `apiKey`, `domaincf`, dan `iniemail` dengan nilai Anda sendiri di dalam file kode.
-
-5. **Jalankan bot:**
+4. **Instal PM2 secara global:**
 
     ```bash
-    node bot.js
+    npm install -g pm2
+    ```
+
+5. **Konfigurasi:**
+   - Gantilah `token`, `apiKey`, `domaincf`, dan `iniemail` dengan nilai Anda sendiri di dalam file kode.
+
+6. **Jalankan bot dengan PM2:**
+
+    ```bash
+    pm2 start bot.js --name autoftbot
+    ```
+
+7. **Opsional: Simpan proses PM2 dan atur agar dimulai otomatis pada boot:**
+
+    ```bash
+    pm2 save
+    pm2 startup
     ```
 
 ## Cara Menggunakan
@@ -45,7 +58,7 @@ AutoFTbot adalah bot Telegram yang memungkinkan pengguna untuk menambahkan dan m
 
 2. **Perintah Bot:**
    - **Tambah IP:** Gunakan tombol "𝘗𝘖𝘐𝘕𝘛𝘐𝘕𝘎 𝘋𝘕𝘚" untuk mengirim IP yang ingin didaftarkan.
-   - **Daftar DNS:** Gunakan tombol "𝘓𝘪𝘴𝘁 𝘋𝘕𝘚 𝘙𝘦𝘤𝘰𝘳𝘥𝘴/𝘥𝘦𝘭𝘦𝘵𝘦" untuk melihat dan menghapus catatan DNS.
+   - **Daftar DNS:** Gunakan tombol "𝘓𝘪𝘴𝘵 𝘋𝘕𝘚 𝘙𝘦𝘤𝘰𝘳𝘥𝘴/𝘥𝘦𝘭𝘦𝘵𝘦" untuk melihat dan menghapus catatan DNS.
 
 ## Kontribusi
 
