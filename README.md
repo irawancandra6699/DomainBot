@@ -19,7 +19,7 @@ AutoFTbot adalah bot Telegram yang memungkinkan pengguna untuk menambahkan dan m
 2. **Masuk ke direktori proyek:**
 
     ```bash
-    cd Domainbot
+    cd DomainBot
     ```
 
 3. **Instal dependencies:**
