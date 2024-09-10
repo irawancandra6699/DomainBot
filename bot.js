@@ -10,6 +10,12 @@ const domaincf = "#";
 const iniemail = "#";
 
 const userContext = {};
+const adminIds = [123456789, 987654321]; //ID telegram
+
+const isValidIP = (ip) => {
+    const regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+    return regex.test(ip);
+};
 
 const getZoneId = async (domain) => {
     const baseDomain = domaincf;
@@ -136,6 +142,9 @@ const createRecord = async (domain, ip, proxied) => {
 };
 
 bot.start((ctx) => {
+    if (!adminIds.includes(ctx.from.id)) {
+        return ctx.reply('⚠️ *You are not authorized to use this bot.*', { parse_mode: 'Markdown' });
+    }
     ctx.replyWithPhoto('https://github.com/AutoFTbot/AutoFTbot/raw/main/assets/programmer.gif', {
         caption: '𝘞𝘦𝘭𝘤𝘰𝘮𝘦! 𝘜𝘴𝘦 𝘵𝘩𝘦 𝘣𝘶𝘵𝘵𝘰𝘯𝘴 𝘣𝘦𝘭𝘰𝘸 𝘵𝘰 𝘢𝘥𝘥 𝘢 𝘯𝘦𝘸 𝘐𝘗 𝘰𝘳 𝘷𝘪𝘦𝘸 𝘋𝘕𝘚 𝘳𝘦𝘤𝘰𝘳𝘥𝘴.',
         ...Markup.inlineKeyboard([
@@ -146,7 +155,10 @@ bot.start((ctx) => {
 });
 
 bot.action('add_ip', (ctx) => {
-    userContext[ctx.from.id] = 'awaiting_ip'; // Set status user
+    if (!adminIds.includes(ctx.from.id)) {
+        return ctx.reply('⚠️ *You are not authorized to use this bot.*', { parse_mode: 'Markdown' });
+    }
+    userContext[ctx.from.id] = 'awaiting_ip';
     ctx.reply('⚠️ *Please send the IP you want to register.*', { parse_mode: 'Markdown' });
 });
 
@@ -156,7 +168,10 @@ bot.on('text', (ctx) => {
 
     if (status === 'awaiting_ip') {
         const ip = ctx.message.text;
-        userContext[userId] = { status: 'awaiting_proxied', ip: ip }; // Set status user
+        if (!isValidIP(ip)) {
+            return ctx.reply('⚠️ *Invalid IP address. Please send a valid IP address.*', { parse_mode: 'Markdown' });
+        }
+        userContext[userId] = { status: 'awaiting_proxied', ip: ip };
         ctx.reply('⚠️ *Do you want to enable proxy for this DNS record?*', {
             parse_mode: 'Markdown',
             ...Markup.inlineKeyboard([
@@ -210,6 +225,9 @@ bot.action('proxied_false', (ctx) => {
 });
 
 bot.action('list_dns_records', async (ctx) => {
+    if (!adminIds.includes(ctx.from.id)) {
+        return ctx.reply('⚠️ *You are not authorized to use this bot.*', { parse_mode: 'Markdown' });
+    }
     try {
         const zoneId = await getZoneId(domaincf);
         const response = await axios.get(`https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records`, {
@@ -241,6 +259,9 @@ bot.action('list_dns_records', async (ctx) => {
 });
 
 bot.action(/delete_(.+)/, async (ctx) => {
+    if (!adminIds.includes(ctx.from.id)) {
+        return ctx.reply('⚠️ *You are not authorized to use this bot.*', { parse_mode: 'Markdown' });
+    }
     const recordId = ctx.match[1];
     try {
         const zoneId = await getZoneId(domaincf);
