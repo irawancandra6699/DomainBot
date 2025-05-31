@@ -7,7 +7,7 @@ const bot = new Telegraf(token);
 // API Key Cloudflare
 const apiKey = "#"; //https://dash.cloudflare.com/profile/api-tokens
 const domaincf = "#"; 
-const iniemail = "#";
+const iniemail = "irawancandra2303@gmail.com";
 
 // Daptar admin anu diidinan ngakses bot
 const adminIds = [123456789, 987654321]; // Ganti jeung user_id admin anu diidinan
